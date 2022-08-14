@@ -1,6 +1,7 @@
 # Import de scrapy framework
 from ast import parse
 from gc import callbacks
+from xml.dom.domreg import well_known_implementations
 import scrapy
 
 # XPATH EXPRESSIONS
@@ -46,6 +47,23 @@ class QuotesSpider(scrapy.Spider):
         }
     }
 
+    # Methods parse that only quotes extract
+    def parse_only_quotes(self, response, **kwargs):
+        if kwargs:
+            quotes = kwargs['quotes']
+
+        quotes.extend(response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall())
+        
+        next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
+        
+        if next_page_button_link:
+            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes})
+        else:
+            yield {
+                'quotes': quotes
+            }
+
+
     # Define obligatory method into Spider Class
     # This method analizes a file to extract information
     # and extrat information we need
@@ -59,10 +77,9 @@ class QuotesSpider(scrapy.Spider):
 
         yield {
             'title': title,
-            'quotes': quotes,
             'top_ten_tags': top_ten_tags
         }
 
-        nex_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
-        if nex_page_button_link:
-            yield response.follow(nex_page_button_link, callback = self.parse)
+        next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
+        if next_page_button_link:
+            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes})
