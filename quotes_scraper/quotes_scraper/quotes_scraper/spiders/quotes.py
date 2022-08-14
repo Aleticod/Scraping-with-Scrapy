@@ -28,7 +28,14 @@ class QuotesSpider(scrapy.Spider):
 
     # custom_settings = {
     #     'FEED_URI': 'quotes.json',
-    #     'FEED_FORMAT': 'json'
+    #     'FEED_FORMAT': 'json',
+    #     'CONCURRENT_REQUESTS': 24,
+    #     'MENUSAGE_LIMIT_MB': 2048,
+    #     'MENUSAGE_NOTIFY_MAIN': ['193837@gmail.com', 'harvey@gmail.com'],
+    #     'ROBOTSTXT_OBEY': True,
+    #     'USER_AGENT': 'PepitoMartinez',
+    #     'FEED_EXPORT_ENCODING': 'utf-8',
+        
     # }
 
     custom_settings = {
