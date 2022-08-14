@@ -73,11 +73,18 @@ class QuotesSpider(scrapy.Spider):
  
         quotes = response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
 
-        top_ten_tags = response.xpath('//div[contains(@class, "tags-box")]/span[@class="tag-item"]/a/text()').getall()
+        top_tags = response.xpath('//div[contains(@class, "tags-box")]/span[@class="tag-item"]/a/text()').getall()
+
+        # Get atribute when is passed with console
+
+        top = getattr(self, 'top', None)
+        if top:
+            top = int(top)
+            top_tags = top_tags[:top]
 
         yield {
             'title': title,
-            'top_ten_tags': top_ten_tags
+            'top_tags': top_tags
         }
 
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
