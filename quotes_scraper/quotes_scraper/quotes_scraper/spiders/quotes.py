@@ -61,13 +61,14 @@ class QuotesSpider(scrapy.Spider):
         if kwargs:
             quotes = kwargs['quotes']
             authors = kwargs['authors']
+            top = int(kwargs['top'])
 
         quotes.extend(response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall())
         authors.extend(response.xpath('//div[@class="quote"]//small[@class="author" and @itemprop="author"]/text()').getall())
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
         
         if next_page_button_link:
-            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes, 'authors': authors })
+            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes, 'authors': authors, 'top': top })
         else:
             if len(quotes) == len(authors):
                 quotes_authors = []
@@ -78,12 +79,15 @@ class QuotesSpider(scrapy.Spider):
                     quotes_authors.append(quote_author)
                     i += 1
                 
+                quotes_authors = quotes_authors[:top]
+
                 yield {
                     'quotes_authos': quotes_authors
                 }
 
             else:
-
+                quotes = quotes[:top]
+                authors = authors[:top]
                 yield {
                     'quotes': quotes,
                     'authors': authors
@@ -117,4 +121,4 @@ class QuotesSpider(scrapy.Spider):
 
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
         if next_page_button_link:
-            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes, 'authors': authors})
+            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes, 'authors': authors, 'top': top})
