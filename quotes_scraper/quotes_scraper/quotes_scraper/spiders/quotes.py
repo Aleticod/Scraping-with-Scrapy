@@ -9,6 +9,8 @@ import scrapy
 # Citas = //span[@class="text" and @itemprop="text"]/text()
 # Top ten tag = //div[contains(@class, "tags-box")]/span[@class="tag-item"]/a/text()
 # Boton next = //ul[@class="pager"]//li[@class="next"]/a/@href
+# Author = //div[@class="quote"]//small[@class="author" and @itemprop="author"]/text()
+
 
 # Spider Class definition
 
@@ -58,17 +60,34 @@ class QuotesSpider(scrapy.Spider):
     def parse_only_quotes(self, response, **kwargs):
         if kwargs:
             quotes = kwargs['quotes']
+            authors = kwargs['authors']
 
         quotes.extend(response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall())
-        
+        authors.extend(response.xpath('//div[@class="quote"]//small[@class="author" and @itemprop="author"]/text()').getall())
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
         
         if next_page_button_link:
-            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes})
+            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes, 'authors': authors })
         else:
-            yield {
-                'quotes': quotes
-            }
+            if len(quotes) == len(authors):
+                quotes_authors = []
+                i = 0
+                for quote in quotes:
+                    quote_author = [quote]
+                    quote_author.append(authors[i])
+                    quotes_authors.append(quote_author)
+                    i += 1
+                
+                yield {
+                    'quotes_authos': quotes_authors
+                }
+
+            else:
+
+                yield {
+                    'quotes': quotes,
+                    'authors': authors
+                }
 
 
     # Define obligatory method into Spider Class
@@ -79,6 +98,8 @@ class QuotesSpider(scrapy.Spider):
         title = response.xpath('//h1/a/text()').get()
  
         quotes = response.xpath('//span[@class="text" and @itemprop="text"]/text()').getall()
+
+        authors = response.xpath('//div[@class="quote"]//small[@class="author" and @itemprop="author"]/text()').getall()
 
         top_tags = response.xpath('//div[contains(@class, "tags-box")]/span[@class="tag-item"]/a/text()').getall()
 
@@ -96,4 +117,4 @@ class QuotesSpider(scrapy.Spider):
 
         next_page_button_link = response.xpath('//ul[@class="pager"]//li[@class="next"]/a/@href').get()
         if next_page_button_link:
-            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes})
+            yield response.follow(next_page_button_link, callback = self.parse_only_quotes, cb_kwargs={'quotes': quotes, 'authors': authors})
